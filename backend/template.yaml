@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Voting App - Polyglot Persistence Architecture
+  (Service 1: DynamoDB | Service 2: PostgreSQL)
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: python3.9
+    Architectures:
+      - x86_64
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,OPTIONS'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      AllowOrigin: "'*'"
+
+Resources:
+  # ---------------------------------------------------------
+  # VERİTABANI 1: DYNAMODB (NoSQL)
+  # Amaç: Yüksek hızlı oy yazma işlemi (Write-Heavy)
+  # ---------------------------------------------------------
+  VotesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Votes
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # ---------------------------------------------------------
+  # MİKROSERVİS 1: VOTE SERVICE (Python)
+  # Görevi: Oyları karşılayıp DynamoDB'ye yazar.
+  # ---------------------------------------------------------
+  VoteSubmissionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/vote-service/
+      Handler: app.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VotesTable
+      Events:
+        VoteApi:
+          Type: Api
+          Properties:
+            Path: /vote
+            Method: post
+
+  # ---------------------------------------------------------
+  # MİKROSERVİS 2: POLL SERVICE (Python)
+  # Görevi: Anket oluşturur (PostgreSQL ile konuşacak).
+  # Not: PostgreSQL bağlantısını kod içinde yapacağız.
+  # ---------------------------------------------------------
+  CreatePollFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/poll-service/
+      Handler: app.lambda_handler
+      Events:
+        PollApi:
+          Type: Api
+          Properties:
+            Path: /poll
+            Method: any
+  
+  # ---------------------------------------------------------
+  # MİKROSERVİS 3: ANALYTICS SERVICE (READ)
+  # Görevi: Oyları sayar ve sonucu döner.
+  # ---------------------------------------------------------
+  AnalyticsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/analytics-service/
+      Handler: app.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref VotesTable
+      Events:
+        AnalyticsApi:
+          Type: Api
+          Properties:
+            Path: /results
+            Method: get
+
+Outputs:
+  VoteApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/" # <-- Burası !Sub olmalı
+  AnalyticsApiUrl:
+    Description: "API Gateway endpoint URL for Results"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/results"
+
+  
