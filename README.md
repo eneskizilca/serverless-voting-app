@@ -1,4 +1,4 @@
-# 🚀 Cloud-Native Serverless Voting Architecture
+# ☁️ Cloud-Native Serverless Voting Architecture
 
 > **Yüksek Trafikli Senaryolar İçin Ölçeklenebilir, Güvenli ve Hibrit Veritabanlı Oylama Sistemi**
 
