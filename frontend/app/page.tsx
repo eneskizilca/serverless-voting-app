@@ -15,7 +15,7 @@ export default function Home() {
   const [activePoll, setActivePoll] = useState<Poll | null>(null);
   const [hasVoted, setHasVoted] = useState<boolean>(false); // Kullanıcı oy verdi mi?
 
-  const BASE_API_URL = "https://5gw5ve21p7.execute-api.eu-central-1.amazonaws.com/Prod"; 
+  const BASE_API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.url.com/Prod";
 
   useEffect(() => {
     const init = async () => {
@@ -25,7 +25,7 @@ export default function Home() {
         if (Array.isArray(data) && data.length > 0) {
           const currentPoll = data[0];
           setActivePoll(currentPoll);
-          
+
           // TARAYICI HAFIZASINI KONTROL ET
           // Kullanıcı bu ankete daha önce oy vermiş mi?
           const localVote = localStorage.getItem(`voted_${currentPoll.id}`);
@@ -60,9 +60,9 @@ export default function Home() {
       const response = await fetch(`${BASE_API_URL}/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          poll_id: activePoll.id, 
-          option: option 
+        body: JSON.stringify({
+          poll_id: activePoll.id,
+          option: option
         }),
       });
 
@@ -70,13 +70,13 @@ export default function Home() {
 
       if (response.ok) {
         setStatus(`✅ "${option}" seçeneği için oy verdiniz!`);
-        
+
         // 1. Oy verildi bilgisini kaydet
         setHasVoted(true);
         localStorage.setItem(`voted_${activePoll.id}`, 'true');
-        
+
         // 2. Sonuçları getir
-        fetchResults(activePoll.id); 
+        fetchResults(activePoll.id);
       } else if (response.status === 403) {
         // Zaten oy vermiş ama localstorage temizlenmiş olabilir, yine de sonuçları açalım
         setStatus(`⚠️ ${data.message}`);
@@ -107,23 +107,23 @@ export default function Home() {
       <div className="max-w-2xl w-full text-center">
         <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent">Geleceği Oyla 🚀</h1>
         <p className="text-slate-400 mb-10 text-sm">Bulut tabanlı, güvenli oylama sistemi.</p>
-        
+
         <div className="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl">
           <h2 className="text-2xl text-white mb-8 font-semibold">
             {activePoll.question}
           </h2>
-          
+
           {/* OY VERME ALANI */}
           {!hasVoted ? (
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <button 
+              <button
                 onClick={() => handleVote("A")}
                 className="flex-1 px-8 py-4 bg-blue-600 rounded-xl hover:bg-blue-500 transition font-bold text-xl shadow-lg shadow-blue-900/50 border border-blue-400"
               >
                 {activePoll.option_a}
               </button>
 
-              <button 
+              <button
                 onClick={() => handleVote("B")}
                 className="flex-1 px-8 py-4 bg-green-600 rounded-xl hover:bg-green-500 transition font-bold text-xl shadow-lg shadow-green-900/50 border border-green-400"
               >
@@ -133,7 +133,7 @@ export default function Home() {
           ) : (
             /* SONUÇ ALANI (Sadece oy verdiyse görünür) */
             <div className="space-y-6 animate-in fade-in duration-700">
-              
+
               {/* Seçenek A Bar */}
               <div>
                 <div className="flex justify-between mb-2">
@@ -141,8 +141,8 @@ export default function Home() {
                   <span className="text-slate-300">{results['A'] || 0} Oy ({calculatePercentage(results['A'] || 0)}%)</span>
                 </div>
                 <div className="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
-                  <div 
-                    className="bg-blue-500 h-4 rounded-full transition-all duration-1000 ease-out" 
+                  <div
+                    className="bg-blue-500 h-4 rounded-full transition-all duration-1000 ease-out"
                     style={{ width: `${calculatePercentage(results['A'] || 0)}%` }}
                   ></div>
                 </div>
@@ -155,8 +155,8 @@ export default function Home() {
                   <span className="text-slate-300">{results['B'] || 0} Oy ({calculatePercentage(results['B'] || 0)}%)</span>
                 </div>
                 <div className="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
-                  <div 
-                    className="bg-green-500 h-4 rounded-full transition-all duration-1000 ease-out" 
+                  <div
+                    className="bg-green-500 h-4 rounded-full transition-all duration-1000 ease-out"
                     style={{ width: `${calculatePercentage(results['B'] || 0)}%` }}
                   ></div>
                 </div>

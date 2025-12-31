@@ -2,12 +2,13 @@ import json
 import pg8000.native
 import uuid
 from urllib.parse import urlparse
+import os
 
 # ---------------------------------------------------------
 # BURAYA SUPABASE LINKINI YAPIŞTIR
 # Örnek: "postgresql://postgres.abcd:sifreniz@aws-0-eu-central-1.pooler.supabase.com:6543/postgres"
 # ---------------------------------------------------------
-DB_URL = "postgresql://postgres.xwnnexnprkvuoszxjvzx:DevOps5223@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
+DB_URL = os.environ.get("DB_CONNECTION_STRING", "postgresql://user:pass@host:port/db")
 
 def get_db_connection():
     # Linki parçalayıp pg8000'e uygun hale getiriyoruz

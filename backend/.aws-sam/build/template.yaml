@@ -6,7 +6,7 @@ Description: 'Voting App - Polyglot Persistence Architecture (Service 1: DynamoD
   '
 Globals:
   Function:
-    Timeout: 10
+    Timeout: 30
     Runtime: python3.9
     Architectures:
     - x86_64
